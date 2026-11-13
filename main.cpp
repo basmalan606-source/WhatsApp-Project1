@@ -4,9 +4,6 @@
 #include <ctime>
 using namespace std;
 
-// ========================
-//       USER CLASS
-// ========================
 class User {
 private:
     string username;
@@ -17,52 +14,59 @@ private:
 
 public:
     User() {
-        // TODO: Implement default constructor
+        username = "";
+        password = "";
+        phoneNumber = "";
+        status = "";
+        updateLastSeen();
     }
 
     User(string uname, string pwd, string phone) {
-        // TODO: Implement parameterized constructor
+        username = uname;
+        password = pwd;
+        phoneNumber = phone;
+        updateLastSeen();
     }
 
     string getUsername() const {
-        // TODO: Implement getter
-        return "";
+        return username;
     }
 
     string getPhoneNumber() const {
-        // TODO: Implement getter
-        return "";
+        return phoneNumber;
     }
 
     string getStatus() const {
-        // TODO: Implement getter
-        return "";
+        return status;
     }
 
     string getLastSeen() const {
-        // TODO: Implement getter
-        return "";
+        return lastSeen;
     }
 
     void setStatus(string newStatus) {
-        // TODO: Implement setter
+        status = newStatus;
     }
 
     void setPhoneNumber(string phone) {
-        // TODO: Implement setter
+        phoneNumber = phone;
     }
 
     void updateLastSeen() {
-        // TODO: Implement last seen update
+        time_t currentTime = time(0);
+        tm* timeInfo = localtime(&currentTime);
+        char timeArr[20];
+        strftime(timeArr, 20, "%d/%m/%Y %H:%M:%S", timeInfo);
+        lastSeen = timeArr;
     }
 
     bool checkPassword(string pwd) const {
-        // TODO: Implement password check
-        return false;
+
+        return password == pwd;
     }
 
     void changePassword(string newPwd) {
-        // TODO: Implement password change
+        password = newPwd;
     }
 };
 
