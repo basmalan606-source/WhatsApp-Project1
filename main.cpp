@@ -275,7 +275,7 @@ private:
         }
         return -1;
     }
-
+    // .....
     bool isLoggedIn() const {
         if (currentUserIndex != -1)
         {
