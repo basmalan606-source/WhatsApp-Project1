@@ -1,4 +1,7 @@
-main/
-main.vcxporj/
-main.vcxproj.filters/
-main.vcxporj.user/
+.vs/
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
