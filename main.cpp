@@ -200,15 +200,29 @@ private:
 
 public:
     PrivateChat(string u1, string u2) {
-        // TODO: Implement constructor
+        user1 = u1;
+        user2 = u2;
+        participants = { u1,u2 };
+        chatName = "Chat between " + user1 + " and " + user2;
     }
 
     void displayChat() const override {
-        // TODO: Implement private chat display
+        cout << "\n=== " << chatName << " ===" << endl;
+        if (messages.empty()) {
+            cout << "No messages yet.\n";
+        }
+        else {
+            for (int i = 0;i < messages.size();i++) {
+                cout << "[" << i << "]";
+                messages[i].display();
+            }
+        }
     }
 
     void showTypingIndicator(const string& username) const {
-        // TODO: Implement typing indicator
+        if (username == user1 || username == user2) {
+            cout << "[" << username << "] is typing...\n";
+        }
     }
 };
 
