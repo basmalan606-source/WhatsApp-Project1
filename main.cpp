@@ -74,86 +74,100 @@ public:
 // ========================
 //      MESSAGE CLASS
 // ========================
- class Message {
+class Message {
 private:
-     string sender;
-     string content;
-     string timestamp;
-     string status;
-     Message* replyTo;
+    string sender;
+    string content;
+    string timestamp;
+    string status;
+    Message* replyTo;
 public:
-     Message(){
-    sender = " ";
-    content = " ";
-    timestamp = " ";
-    status = " ";
-    replyTo = nullptr;
-     }
-     Message(string sndr, string cntnt){
-    sender = sndr;
-    content = cntnt;
-    status = "sent";
-    replyTo = nullptr;
-    updateTimestamp();
-   }
-     string getContent() const{
-     return content;
-     }
-     string getSender() const{
-     return sender;
-     }
-     string getTimestamp() const{
-     return timestamp;
-     }
-     string getStatus() const{
-         return status;
-     }
-     Message* getReplyTo() const{
-    return replyTo;
-     }
-     void setStatus(string newStatus){
-     if( newStatus == "sent" || newStatus == "delivered" || newStatus == "read")
-         status = newStatus;
-     }
-     void setReplyTo (Message* msg){
-      replyTo = msg;
-     }
-     void updateTimestamp(){
-    time_t t = time(0);
-    timestamp = ctime(&t);
-    cout << timestamp;
-     }
-     void display() const{
-    cout << "\n [" << timestamp << "]" << endl;
-    cout << sender << ":" << content << endl;
-    cout << "Status:" << status << endl;
-       if(replyTo != nullptr){
-        cout <<"Reply to:" << replyTo->content << "\"" << endl;
-       }
+    Message() {
+        sender = " ";
+        content = " ";
+        timestamp = " ";
+        status = " ";
+        replyTo = nullptr;
     }
-    void addEmoji(string emojicode){
-        if(emojicode == ":)" ){
-            content += "\xF0\x9F\x99\x82";
+    Message(string sndr, string cntnt) {
+        sender = sndr;
+        content = cntnt;
+        status = "sent";
+        replyTo = nullptr;
+        updateTimestamp();
+    }
+    string getContent() const {
+        return content;
+    }
+    string getSender() const {
+        return sender;
+    }
+    string getTimestamp() const {
+        return timestamp;
+    }
+    string getStatus() const {
+        return status;
+    }
+    Message* getReplyTo() const {
+        return replyTo;
+    }
+    void setStatus(string newStatus) {
+        if (newStatus == "sent" || newStatus == "delivered" || newStatus == "read")
+            status = newStatus;
+    }
+    void setReplyTo(Message* msg) {
+        replyTo = msg;
+    }
+    void updateTimestamp() {
+        time_t t = time(0);
+        timestamp = ctime(&t);
+        // Modification: Removed cout so this method only updates the timestamp.
+    }
+    void display() const {
+        cout << "\n [" << timestamp << "]" << endl;
+        cout << sender << ":" << content << endl;
+        cout << "Status:" << status << endl;
+        if (replyTo != nullptr) {
+            cout << "Reply to:" << replyTo->content << "\"" << endl;
         }
-        else if(emojicode == ":(" ){
-            content += "\xF0\x9F\x99\x81";
+    }
+    void addEmoji(string emojicode) {
+        string emoji;
+
+        if (emojicode == ":)") {
+            emoji = "\xF0\x9F\x99\x82";
         }
-        else if(emojicode == ":D" ){
-            content += "\xF0\x9F\x98\x83";
+        else if (emojicode == ":(") {
+            emoji = "\xF0\x9F\x99\x81";
         }
-        else if(emojicode == "<3" ){
-            content += "\xE2\x9D\xA4";
+        else if (emojicode == ":D") {
+            emoji = "\xF0\x9F\x98\x83";
         }
-        else if(emojicode == ":thumbsup:" ){
-            content += "\xF0\x9F\x91\x8D";
+        else if (emojicode == "<3") {
+            emoji = "\xE2\x9D\xA4";
         }
-     }   
+        else if (emojicode == ":thumbsup:") {
+            emoji = "\xF0\x9F\x91\x8D";
+        }
+
+        // Modification: Replace the emoji code inside the message instead of appending the emoji.
+        if (!emoji.empty()) {
+            size_t position = content.find(emojicode);
+            while (position != string::npos) {
+                content.replace(position, emojicode.length(), emoji);
+                position = content.find(emojicode, position + emoji.length());
+            }
+        }
+    }
 };
 
 // ========================
 //       CHAT CLASS (BASE)
 // ========================
 class Chat {
+    // Modification: Allow WhatsApp to check whether the current user belongs to a chat.
+    friend class WhatsApp;
+
 protected:
     vector<string> participants;
     vector<Message> messages;
@@ -239,48 +253,48 @@ public:
     }
 
     // Export chat to a file
-    void exportToFile(const string& filename) const {
+    //void exportToFile(const string& filename) const {
 
-        ofstream file(filename);
-
-        if (!file.is_open()) {
-            cout << "Error: Could not open file.\n";
-            return;
-        }
-
-        file << "========== " << chatName << " ==========\n";
-
-        file << "Participants: ";
-
-        for (const string& participant : participants) {
-            file << participant << " ";
-        }
-
-        file << "\n\n";
-
-        for (const Message& msg : messages) {
-
-            file << "Sender: " << msg.getSender() << "\n";
-            file << "Message: " << msg.getContent() << "\n";
-            file << "Time: " << msg.getTimestamp() << "\n";
-            file << "Status: " << msg.getStatus() << "\n";
-
-            if (msg.getReplyTo() != nullptr) {
-                file << "Replying to: "
-                     << msg.getReplyTo()->getContent() << "\n";
-            }
-
-            file << "-------------------------\n";
-        }
-
-        file.close();
-
-        cout << "Chat exported successfully!\n";
-    }
+    //    // TODO: Implement export to file
+    //}
 
     // Virtual destructor
     virtual ~Chat() = default;
 };
+//    Private Chat Class:
+class PrivateChat : public Chat {
+private:
+    string user1;
+    string user2;
+
+public:
+    PrivateChat(string u1, string u2) {
+        user1 = u1;
+        user2 = u2;
+        participants = { u1,u2 };
+        chatName = "Chat between " + user1 + " and " + user2;
+    }
+
+    void displayChat() const override {
+        cout << "\n=== " << chatName << " ===" << endl;
+        if (messages.empty()) {
+            cout << "No messages yet.\n";
+        }
+        else {
+            for (int i = 0; i < messages.size(); i++) {
+                cout << "[" << i << "]";
+                messages[i].display();
+            }
+        }
+    }
+
+    void showTypingIndicator(const string& username) const {
+        if (username == user1 || username == user2) {
+            cout << "[" << username << "] is typing...\n";
+        }
+    }
+};
+
 
 // ========================
 //      GROUP CHAT CLASS
@@ -295,7 +309,7 @@ public:
         chatName = name;
         participants = users;
         bool creatorexists = false;
-        for (int i = 0;i < users.size();i++) {
+        for (int i = 0; i < users.size(); i++) {
             if (users[i] == creator) {
                 creatorexists = true;
                 break;
@@ -323,10 +337,10 @@ public:
         if (!isAdmin(admin)) {
             return false;
         }
-        for (int i = 0;i < participants.size();i++) {
+        for (int i = 0; i < participants.size(); i++) {
             if (participants[i] == userToRemove) {
                 participants.erase(participants.begin() + i);
-                for (int j = 0;j < admins.size();j++) {
+                for (int j = 0; j < admins.size(); j++) {
                     if (admins[j] == userToRemove) {
                         admins.erase(admins.begin() + j);
                         break;
@@ -339,7 +353,7 @@ public:
     }
 
     bool isAdmin(string username) const {
-        for (int i = 0;i < admins.size();i++) {
+        for (int i = 0; i < admins.size(); i++) {
             if (admins[i] == username) {
                 return true;
             }
@@ -348,7 +362,7 @@ public:
     }
 
     bool isParticipant(string username) const {
-        for (int i = 0;i < participants.size();i++) {
+        for (int i = 0; i < participants.size(); i++) {
             if (participants[i] == username) {
                 return true;
             }
@@ -364,12 +378,12 @@ public:
         cout << "\n=== Group Chat: " << chatName << " ===" << endl;
         cout << "Description: " << description << endl;
         cout << "Participants (" << participants.size() << "): ";
-        for (int i = 0;i < participants.size();i++) {
+        for (int i = 0; i < participants.size(); i++) {
             cout << participants[i] << " ";
         }
         cout << endl;
         cout << "Admins (" << admins.size() << "): ";
-        for (int i = 0;i < admins.size();i++) {
+        for (int i = 0; i < admins.size(); i++) {
             cout << admins[i] << " ";
         }
         cout << endl;
@@ -378,7 +392,7 @@ public:
             cout << "No messages yet.\n";
         }
         else {
-            for (int i = 0;i < messages.size();i++) {
+            for (int i = 0; i < messages.size(); i++) {
                 cout << "[" << i << "]";
                 messages[i].display();
             }
@@ -389,7 +403,7 @@ public:
     void sendJoinRequest(const string& username) {
         cout << "User " << username << " sent a join request to group " << chatName << " .\n";
     }
-    
+
 
 };
 
@@ -430,6 +444,13 @@ private:
 
 public:
     WhatsApp() : currentUserIndex(-1) {}
+
+    // Modification: Free dynamically allocated chats when the WhatsApp object is destroyed.
+    ~WhatsApp() {
+        for (int i = 0; i < chats.size(); i++) {
+            delete chats[i];
+        }
+    }
 
     void signUp() {
         string username, password, phone;
@@ -557,15 +578,17 @@ public:
         }
         bool found = false;
         for (int i = 0; i < chats.size(); i++) {
-            GroupChat* group = dynamic_cast<GroupChat*>(chats[i]);
-            if (group != nullptr) {
-                if (group->isParticipant(getCurrentUsername())) {
-                    cout << "\nChat " << i + 1 << endl;
-                    chats[i]->displayChat();
-                    found = true;
+            // Modification: Display a chat only if the logged-in user is one of its participants.
+            bool isParticipant = false;
+            for (int j = 0; j < chats[i]->participants.size(); j++) {
+                if (chats[i]->participants[j] == getCurrentUsername()) {
+                    isParticipant = true;
+                    break;
                 }
             }
-            else {
+
+            if (isParticipant) {
+                cout << "\nChat " << i + 1 << endl;
                 chats[i]->displayChat();
                 found = true;
             }
