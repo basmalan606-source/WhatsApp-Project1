@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <fstream>
 using namespace std;
 
 class User {
@@ -159,71 +160,126 @@ protected:
     string chatName;
 
 public:
+
+    // Default constructor
     Chat() {
-        // TODO: Implement default constructor
+        chatName = "";
     }
 
+    // Parameterized constructor
     Chat(vector<string> users, string name) {
-        // TODO: Implement parameterized constructor
+        participants = users;
+        chatName = name;
     }
 
+    // Add a message
     void addMessage(const Message& msg) {
-        // TODO: Implement message addition
+        messages.push_back(msg);
     }
 
+    // Delete a message
     bool deleteMessage(int index, const string& username) {
-        // TODO: Implement message deletion
-        return false;
-    }
 
-    virtual void displayChat() const {
-        // TODO: Implement chat display
-    }
-
-    vector<Message> searchMessages(string keyword) const {
-        // TODO: Implement message search
-        return {};
-    }
-
-    void exportToFile(const string& filename) const {
-        // TODO: Implement export to file
-    }
-};
-
-// ========================
-//     PRIVATE CHAT CLASS
-// ========================
-class PrivateChat : public Chat {
-private:
-    string user1;
-    string user2;
-
-public:
-    PrivateChat(string u1, string u2) {
-        user1 = u1;
-        user2 = u2;
-        participants = { u1,u2 };
-        chatName = "Chat between " + user1 + " and " + user2;
-    }
-
-    void displayChat() const override {
-        cout << "\n=== " << chatName << " ===" << endl;
-        if (messages.empty()) {
-            cout << "No messages yet.\n";
+        // Check if index is valid
+        if (index < 0 || index >= static_cast<int>(messages.size())) {
+            return false;
         }
-        else {
-            for (int i = 0;i < messages.size();i++) {
-                cout << "[" << i << "]";
-                messages[i].display();
+
+        // Check if the user owns the message
+        if (messages[index].getSender() != username) {
+            return false;
+        }
+
+        // Prevent dangling reply pointers to the deleted message
+        Message* deletedMessage = &messages[index];
+
+        for (Message& msg : messages) {
+            if (msg.getReplyTo() == deletedMessage) {
+                msg.setReplyTo(nullptr);
             }
         }
+
+        // Delete the message
+        messages.erase(messages.begin() + index);
+
+        return true;
     }
 
-    void showTypingIndicator(const string& username) const {
-        if (username == user1 || username == user2) {
-            cout << "[" << username << "] is typing...\n";
+    // Display all messages
+    virtual void displayChat() const {
+
+        cout << "\n========== " << chatName << " ==========\n";
+
+        if (messages.empty()) {
+            cout << "No messages yet.\n";
+            return;
         }
+
+        for (const Message& msg : messages) {
+            msg.display();
+        }
+
+        cout << "================================\n";
     }
+
+    // Search messages by keyword
+    vector<Message> searchMessages(string keyword) const {
+
+        vector<Message> results;
+
+        for (const Message& msg : messages) {
+
+            if (msg.getContent().find(keyword) != string::npos) {
+                results.push_back(msg);
+            }
+
+        }
+
+        return results;
+    }
+
+    // Export chat to a file
+    void exportToFile(const string& filename) const {
+
+        ofstream file(filename);
+
+        if (!file.is_open()) {
+            cout << "Error: Could not open file.\n";
+            return;
+        }
+
+        file << "========== " << chatName << " ==========\n";
+
+        file << "Participants: ";
+
+        for (const string& participant : participants) {
+            file << participant << " ";
+        }
+
+        file << "\n\n";
+
+        for (const Message& msg : messages) {
+
+            file << "Sender: " << msg.getSender() << "\n";
+            file << "Message: " << msg.getContent() << "\n";
+            file << "Time: " << msg.getTimestamp() << "\n";
+            file << "Status: " << msg.getStatus() << "\n";
+
+            if (msg.getReplyTo() != nullptr) {
+                file << "Replying to: "
+                     << msg.getReplyTo()->getContent() << "\n";
+            }
+
+            file << "-------------------------\n";
+        }
+
+        file.close();
+
+        cout << "Chat exported successfully!\n";
+    }
+
+    // Virtual destructor
+    virtual ~Chat() = default;
 };
 
 // ========================
